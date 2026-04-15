@@ -4,7 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <title>IT Support Assessment | HostData - M. Fahrel</title>
+        <title>Technical Test HostData - MOCHAMMAD FAHREL PUTRA ARDIANSYAH</title>
 
         <!-- Fonts: Inter & JetBrains Mono -->
         <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -56,7 +56,7 @@
                     <div class="space-y-3">
                         <p class="mono text-blue-600 text-sm font-semibold tracking-tighter uppercase">HostData Recruitment Task</p>
                         <h1 class="text-5xl lg:text-7xl font-extrabold tracking-tight text-slate-900 leading-tight">
-                            System & IT <br/>Operations<span class="text-blue-600">.</span>
+                            IT <br/>Support<span class="text-blue-600">.</span>
                         </h1>
                     </div>
                     
