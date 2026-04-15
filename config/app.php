@@ -123,4 +123,6 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    'vpn_allowed_prefix' => env('VPN_ALLOWED_PREFIX'),
+
 ];

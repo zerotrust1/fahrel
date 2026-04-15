@@ -17,18 +17,20 @@ class VpnAccess
     public function handle(Request $request, Closure $next): Response
     {
         $clientIp = $request->ip();
-        $allowedPrefix = env('VPN_ALLOWED_PREFIX');
+        
+        // Use config() which is more reliable than env() in production/cached states
+        $allowedPrefix = config('app.vpn_allowed_prefix');
 
-        // Logic check: if prefix is not defined, deny everyone for safety
+        // SECURITY: If config is missing, block EVERYTHING to admin for safety
         if (empty($allowedPrefix)) {
-            Log::emergency("CRITICAL: VPN_ALLOWED_PREFIX is not defined in .env. Admin access blocked.");
-            return $this->denyAccess($clientIp);
+            Log::emergency("VPN_SECURITY_BREACH: VPN_ALLOWED_PREFIX is not set in config. Blocking all admin access.");
+            return $this->denyAccess($clientIp, "CONFIG_VOID");
         }
 
         // Strict prefix verification
         if (!str_starts_with($clientIp, $allowedPrefix)) {
-            Log::warning("SECURITY ALERT: Admin access denied for IP $clientIp. Required prefix: $allowedPrefix");
-            return $this->denyAccess($clientIp);
+            Log::warning("VPN_ACCESS_DENIED: IP $clientIp attempted access without VPN prefix $allowedPrefix");
+            return $this->denyAccess($clientIp, "INVALID_TUNNEL");
         }
 
         return $next($request);
@@ -37,7 +39,7 @@ class VpnAccess
     /**
      * Deny access with a professional technical response
      */
-    private function denyAccess($ip)
+    private function denyAccess($ip, $reason)
     {
         try {
             $guests = \App\Models\Guestbook::orderBy('id', 'desc')->get();
@@ -47,7 +49,7 @@ class VpnAccess
 
         return response()->view('welcome', [
             'guests' => $guests,
-            'error' => "SYSTEM_ACCESS_DENIED: Your endpoint ($ip) is not connected to the authorized HostData VPN tunnel."
+            'error' => "SYSTEM_ACCESS_DENIED [$reason]: Your endpoint ($ip) is not connected to the authorized HostData VPN tunnel."
         ], 403);
     }
 }
