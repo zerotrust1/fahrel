@@ -142,6 +142,11 @@
                                 @if(session('error'))
                                     <p class="text-xs text-red-600 font-bold text-center tracking-wide mt-2">{{ session('error') }}</p>
                                 @endif
+                                @if(isset($error))
+                                    <div class="mt-4 p-4 bg-red-50 border border-red-100 rounded-2xl">
+                                        <p class="text-xs text-red-600 font-bold text-center tracking-wide italic">{{ $error }}</p>
+                                    </div>
+                                @endif
                             </form>
                         </div>
 
