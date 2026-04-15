@@ -16,19 +16,38 @@ class VpnAccess
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // Common OpenVPN subnet is 10.8.0.0/24
-        // You can customize this IP check based on your OpenVPN configuration
         $clientIp = $request->ip();
-        $allowedPrefix = env('VPN_ALLOWED_PREFIX', '10.8.0.');
+        $allowedPrefix = env('VPN_ALLOWED_PREFIX');
 
-        if (!str_starts_with($clientIp, $allowedPrefix) && !app()->environment('local')) {
-            Log::warning("Unauthorized Admin Access Attempt from IP: $clientIp");
-            return response()->view('welcome', [
-                'guests' => \App\Models\Guestbook::orderBy('id', 'desc')->get(),
-                'error' => 'Access Denied: You must be connected to the HostData VPN to access this terminal.'
-            ], 403);
+        // Logic check: if prefix is not defined, deny everyone for safety
+        if (empty($allowedPrefix)) {
+            Log::emergency("CRITICAL: VPN_ALLOWED_PREFIX is not defined in .env. Admin access blocked.");
+            return $this->denyAccess($clientIp);
+        }
+
+        // Strict prefix verification
+        if (!str_starts_with($clientIp, $allowedPrefix)) {
+            Log::warning("SECURITY ALERT: Admin access denied for IP $clientIp. Required prefix: $allowedPrefix");
+            return $this->denyAccess($clientIp);
         }
 
         return $next($request);
+    }
+
+    /**
+     * Deny access with a professional technical response
+     */
+    private function denyAccess($ip)
+    {
+        try {
+            $guests = \App\Models\Guestbook::orderBy('id', 'desc')->get();
+        } catch (\Exception $e) {
+            $guests = collect([]);
+        }
+
+        return response()->view('welcome', [
+            'guests' => $guests,
+            'error' => "SYSTEM_ACCESS_DENIED: Your endpoint ($ip) is not connected to the authorized HostData VPN tunnel."
+        ], 403);
     }
 }
