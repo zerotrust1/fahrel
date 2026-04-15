@@ -9,68 +9,64 @@ use Illuminate\Support\Facades\DB;
 
 class GuestbookController extends Controller
 {
-    /**
-     * Public Interface: Display system logs on landing page
-     */
     public function index()
     {
         try {
-            $guests = Guestbook::orderBy('created_at', 'desc')->get();
+            // MariaDB optimized fetching
+            $guests = Guestbook::orderBy('id', 'desc')->limit(50)->get();
+            return view('welcome', compact('guests'));
         } catch (\Exception $e) {
-            Log::error("Real Server - Guestbook Fetch Error: " . $e->getMessage());
+            Log::error("PROD INDEX ERROR: " . $e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine());
             $guests = collect([]);
+            return view('welcome', compact('guests'));
         }
-        
-        return view('welcome', compact('guests'));
     }
 
-    /**
-     * Admin Interface: High-level System Management
-     */
     public function admin()
     {
         try {
             $guests = Guestbook::orderBy('id', 'desc')->get();
+            return view('admin.index', compact('guests'));
         } catch (\Exception $e) {
-            Log::error("Real Server - Admin Fetch Error: " . $e->getMessage());
-            $guests = collect([]);
+            Log::error("PROD ADMIN ERROR: " . $e->getMessage());
+            // Fail gracefully
+            return response("Admin System Temporarily Unavailable. Check logs.", 500);
         }
-
-        return view('admin.index', compact('guests'));
     }
 
-    /**
-     * Store: Commit log entry securely to MariaDB
-     */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:100',
-            'email' => 'required|email|max:150',
-            'message' => 'required|string|max:1000',
-        ]);
-
         try {
-            Guestbook::create($validated);
-            return redirect()->route('welcome')->with('success', 'Database commit successful.');
+            $validated = $request->validate([
+                'name' => 'required|string|max:100',
+                'email' => 'required|email|max:150',
+                'message' => 'required|string|max:1000',
+            ]);
+
+            // Direct DB insertion to bypass potential Model issues
+            DB::table('guestbooks')->insert([
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'message' => $validated['message'],
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            return redirect()->route('welcome')->with('success', 'Database synchronization successful.');
         } catch (\Exception $e) {
-            Log::critical("MariaDB Write Failure: " . $e->getMessage());
-            return back()->withInput()->with('error', 'Critical System Failure. Data not saved.');
+            Log::critical("PROD WRITE ERROR: " . $e->getMessage());
+            return back()->withInput()->with('error', 'Write Operation Failed. System Integrity Protected.');
         }
     }
 
-    /**
-     * Delete: Purge database records permanently
-     */
     public function destroy($id)
     {
         try {
-            $entry = Guestbook::findOrFail($id);
-            $entry->delete();
-            return back()->with('success', 'Database record purged successfully.');
+            Guestbook::findOrFail($id)->delete();
+            return back()->with('success', 'Record purged.');
         } catch (\Exception $e) {
-            Log::error("Purge Error: " . $e->getMessage());
-            return back()->with('error', 'Purge failed: Access Denied or Record Missing.');
+            Log::error("PROD DELETE ERROR: " . $e->getMessage());
+            return back()->with('error', 'Operation denied.');
         }
     }
 }

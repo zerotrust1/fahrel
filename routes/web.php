@@ -2,25 +2,25 @@
 
 use App\Http\Controllers\GuestbookController;
 use Illuminate\Support\Facades\Route;
-use App\Models\Guestbook;
 
 /*
 |--------------------------------------------------------------------------
-| Web Routes - Integrated Environment Support
+| Web Routes - Production Hardened
 |--------------------------------------------------------------------------
 */
 
-// Admin Subdomain Routing (Production)
+// Flexible Admin Routing
+// Try subdomain first, if fails, the /admin fallback below will catch it
 Route::domain('admin.mochammadfahrelputraardiansyah.my.id')->group(function () {
     Route::get('/', [GuestbookController::class, 'admin'])->name('admin.index');
 });
 
-// Main Landing Page Route - Always ensure $guests is passed
+// Main Landing Page
 Route::get('/', [GuestbookController::class, 'index'])->name('welcome');
 
-// Guestbook Actions (Integrated CRUD)
+// Development/Production Fallback for Admin (Safe for IT Support)
+Route::get('/admin', [GuestbookController::class, 'admin'])->name('admin.dev');
+
+// CRUD Operations
 Route::post('/guestbook/store', [GuestbookController::class, 'store'])->name('guestbook.store');
 Route::delete('/guestbook/{id}', [GuestbookController::class, 'destroy'])->name('guestbook.destroy');
-
-// Public Guestbook Alias
-Route::get('/guestbook', [GuestbookController::class, 'index'])->name('guestbook.index');
