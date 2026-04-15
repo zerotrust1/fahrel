@@ -4,52 +4,72 @@ namespace App\Http\Controllers;
 
 use App\Models\Guestbook;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class GuestbookController extends Controller
 {
     /**
-     * Display a listing of the resource on the landing page.
+     * Public Interface: Display system logs (Guestbook)
      */
     public function index()
     {
-        $guests = Guestbook::latest()->get();
+        try {
+            $guests = Guestbook::latest()->get();
+        } catch (\Exception $e) {
+            Log::error("Guestbook fetch error: " . $e->getMessage());
+            $guests = collect([]);
+        }
+        
         return view('welcome', compact('guests'));
     }
 
     /**
-     * Display the admin dashboard.
+     * Admin Interface: System Log Management
      */
     public function admin()
     {
-        $guests = Guestbook::latest()->get();
+        try {
+            $guests = Guestbook::orderBy('id', 'desc')->get();
+        } catch (\Exception $e) {
+            Log::error("Admin Guestbook fetch error: " . $e->getMessage());
+            $guests = collect([]);
+        }
+
         return view('admin.index', compact('guests'));
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Action: Commit new log entry
      */
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255',
+            'name' => 'required|string|max:100',
+            'email' => 'required|email|max:150',
             'message' => 'required|string|max:1000',
         ]);
 
-        Guestbook::create($validated);
-
-        return redirect()->route('welcome')
-            ->with('success', 'Thank you for your message!');
+        try {
+            Guestbook::create($validated);
+            return redirect()->route('welcome')->with('success', 'Entry successfully committed to system database.');
+        } catch (\Exception $e) {
+            Log::error("Guestbook store error: " . $e->getMessage());
+            return back()->withInput()->with('error', 'Database write failure. Check system logs.');
+        }
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Action: Purge log entry
      */
-    public function destroy(Guestbook $guestbook)
+    public function destroy($id)
     {
-        $guestbook->delete();
-
-        return redirect()->route('welcome')
-            ->with('success', 'Entry deleted successfully.');
+        try {
+            $entry = Guestbook::findOrFail($id);
+            $entry->delete();
+            return back()->with('success', 'Record purged from database successfully.');
+        } catch (\Exception $e) {
+            Log::error("Guestbook delete error: " . $e->getMessage());
+            return back()->with('error', 'Purge failed: Record not found or database error.');
+        }
     }
 }
