@@ -4,24 +4,26 @@ use App\Http\Controllers\GuestbookController;
 use Illuminate\Support\Facades\Route;
 use App\Models\Guestbook;
 
-// Admin Subdomain Routing
+/*
+|--------------------------------------------------------------------------
+| Web Routes - Real Server Optimized
+|--------------------------------------------------------------------------
+*/
+
+// Admin Subdomain Routing (Production)
 Route::domain('admin.mochammadfahrelputraardiansyah.my.id')->group(function () {
     Route::get('/', [GuestbookController::class, 'admin'])->name('admin.index');
 });
 
+// Admin Route for Development (Temporary Access)
+Route::get('/admin', [GuestbookController::class, 'admin'])->name('admin.dev');
+
 // Main Landing Page Route
-Route::get('/', function() {
-    try {
-        $guests = Guestbook::latest()->get();
-    } catch (\Exception $e) {
-        $guests = collect([]);
-    }
-    return view('welcome', compact('guests'));
-})->name('welcome');
+Route::get('/', [GuestbookController::class, 'index'])->name('welcome');
 
-// Guestbook Actions
-Route::post('/guestbook', [GuestbookController::class, 'store'])->name('guestbook.store');
-Route::delete('/guestbook/{guestbook}', [GuestbookController::class, 'destroy'])->name('guestbook.destroy');
+// Guestbook Actions (Integrated CRUD)
+Route::post('/guestbook/store', [GuestbookController::class, 'store'])->name('guestbook.store');
+Route::delete('/guestbook/{id}', [GuestbookController::class, 'destroy'])->name('guestbook.destroy');
 
-// Public Guestbook Alias
+// Fallback for public index if accessed directly
 Route::get('/guestbook', [GuestbookController::class, 'index'])->name('guestbook.index');

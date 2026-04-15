@@ -54,9 +54,9 @@
                 <!-- Hero Section -->
                 <section class="space-y-8 entry-animation" style="animation-delay: 200ms">
                     <div class="space-y-3">
-                        <p class="mono text-blue-600 text-sm font-semibold tracking-tighter uppercase">Technical Test HostData</p>
+                        <p class="mono text-blue-600 text-sm font-semibold tracking-tighter uppercase">HostData Recruitment Task</p>
                         <h1 class="text-5xl lg:text-7xl font-extrabold tracking-tight text-slate-900 leading-tight">
-                            IT <br/>Support<span class="text-blue-600">.</span>
+                            System & IT <br/>Operations<span class="text-blue-600">.</span>
                         </h1>
                     </div>
                     
@@ -122,21 +122,25 @@
                                 @csrf
                                 <div class="space-y-1.5">
                                     <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Identity Name</label>
-                                    <input type="text" name="name" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition outline-none text-sm font-medium" placeholder="Ex: Lead Recruiter">
+                                    <input type="text" name="name" value="{{ old('name') }}" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition outline-none text-sm font-medium" placeholder="Ex: Lead Recruiter">
                                 </div>
                                 <div class="space-y-1.5">
                                     <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Direct Email</label>
-                                    <input type="email" name="email" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition outline-none text-sm font-medium" placeholder="name@company.com">
+                                    <input type="email" name="email" value="{{ old('email') }}" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition outline-none text-sm font-medium" placeholder="name@company.com">
                                 </div>
                                 <div class="space-y-1.5">
                                     <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Technical Notes</label>
-                                    <textarea name="message" rows="3" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition outline-none text-sm font-medium" placeholder="Write system observation..."></textarea>
+                                    <textarea name="message" rows="3" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition outline-none text-sm font-medium" placeholder="Write system observation...">{{ old('message') }}</textarea>
                                 </div>
                                 <button type="submit" class="w-full py-4 bg-blue-600 text-white rounded-xl font-bold text-sm uppercase tracking-widest shadow-lg shadow-blue-100 hover:bg-blue-700 transition active:scale-[0.98]">
                                     Commit Entry
                                 </button>
+                                
                                 @if(session('success'))
-                                    <p class="text-xs text-emerald-600 font-bold text-center animate-pulse tracking-wide">{{ session('success') }}</p>
+                                    <p class="text-xs text-emerald-600 font-bold text-center animate-pulse tracking-wide mt-2">{{ session('success') }}</p>
+                                @endif
+                                @if(session('error'))
+                                    <p class="text-xs text-red-600 font-bold text-center tracking-wide mt-2">{{ session('error') }}</p>
                                 @endif
                             </form>
                         </div>
@@ -145,7 +149,7 @@
                         <div class="lg:col-span-7 space-y-4">
                             <div class="flex items-center justify-between px-2">
                                 <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Active Database Records</h3>
-                                <span class="mono text-[10px] font-bold text-slate-400">{{ count($guests) }} entries</span>
+                                <span class="mono text-[10px] font-bold text-slate-400">{{ optional($guests)->count() ?? 0 }} entries</span>
                             </div>
 
                             <div class="space-y-3 max-h-[500px] overflow-y-auto pr-2 scrollbar-hide">
@@ -158,7 +162,7 @@
                                             </div>
                                             <p class="text-xs text-slate-600 leading-relaxed italic">"{{ $guest->message }}"</p>
                                         </div>
-                                        <form action="{{ route('guestbook.destroy', $guest) }}" method="POST">
+                                        <form action="{{ route('guestbook.destroy', $guest->id) }}" method="POST" onsubmit="return confirm('Purge this record?')">
                                             @csrf @method('DELETE')
                                             <button type="submit" class="text-slate-300 hover:text-red-500 transition p-1.5">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>

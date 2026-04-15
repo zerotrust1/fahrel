@@ -5,18 +5,19 @@ namespace App\Http\Controllers;
 use App\Models\Guestbook;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class GuestbookController extends Controller
 {
     /**
-     * Public Interface: Display system logs (Guestbook)
+     * Public Interface: Display system logs on landing page
      */
     public function index()
     {
         try {
-            $guests = Guestbook::latest()->get();
+            $guests = Guestbook::orderBy('created_at', 'desc')->get();
         } catch (\Exception $e) {
-            Log::error("Guestbook fetch error: " . $e->getMessage());
+            Log::error("Real Server - Guestbook Fetch Error: " . $e->getMessage());
             $guests = collect([]);
         }
         
@@ -24,14 +25,14 @@ class GuestbookController extends Controller
     }
 
     /**
-     * Admin Interface: System Log Management
+     * Admin Interface: High-level System Management
      */
     public function admin()
     {
         try {
             $guests = Guestbook::orderBy('id', 'desc')->get();
         } catch (\Exception $e) {
-            Log::error("Admin Guestbook fetch error: " . $e->getMessage());
+            Log::error("Real Server - Admin Fetch Error: " . $e->getMessage());
             $guests = collect([]);
         }
 
@@ -39,7 +40,7 @@ class GuestbookController extends Controller
     }
 
     /**
-     * Action: Commit new log entry
+     * Store: Commit log entry securely to MariaDB
      */
     public function store(Request $request)
     {
@@ -51,25 +52,25 @@ class GuestbookController extends Controller
 
         try {
             Guestbook::create($validated);
-            return redirect()->route('welcome')->with('success', 'Entry successfully committed to system database.');
+            return redirect()->route('welcome')->with('success', 'Database commit successful.');
         } catch (\Exception $e) {
-            Log::error("Guestbook store error: " . $e->getMessage());
-            return back()->withInput()->with('error', 'Database write failure. Check system logs.');
+            Log::critical("MariaDB Write Failure: " . $e->getMessage());
+            return back()->withInput()->with('error', 'Critical System Failure. Data not saved.');
         }
     }
 
     /**
-     * Action: Purge log entry
+     * Delete: Purge database records permanently
      */
     public function destroy($id)
     {
         try {
             $entry = Guestbook::findOrFail($id);
             $entry->delete();
-            return back()->with('success', 'Record purged from database successfully.');
+            return back()->with('success', 'Database record purged successfully.');
         } catch (\Exception $e) {
-            Log::error("Guestbook delete error: " . $e->getMessage());
-            return back()->with('error', 'Purge failed: Record not found or database error.');
+            Log::error("Purge Error: " . $e->getMessage());
+            return back()->with('error', 'Purge failed: Access Denied or Record Missing.');
         }
     }
 }
